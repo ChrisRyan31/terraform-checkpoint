@@ -102,6 +102,7 @@ resource "aws_instance" "ec2-t2-micro" {
   associate_public_ip_address = true
   subnet_id                   = aws_subnet.subnet-terraform-checkpoint.id
   vpc_security_group_ids      = [aws_security_group.security-group-terraform-checkpoint.id]
+  user_data                   = file("install.sh")
   tags = {
     Name = "terraformed-ec2-checkpoint"
   }
