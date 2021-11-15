@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     aws = {
-      source = "hashicorp/aws"
+      source  = "hashicorp/aws"
       version = "~> 3.0"
     }
   }
@@ -22,8 +22,8 @@ resource "aws_vpc" "vpc-terraform-checkpoint" {
 
 # Create a subnet
 resource "aws_subnet" "subnet-terraform-checkpoint" {
-  vpc_id = aws_vpc.vpc-terraform-checkpoint.id
-  cidr_block = "10.0.1.0/24"
+  vpc_id                  = aws_vpc.vpc-terraform-checkpoint.id
+  cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
 
   tags = {
@@ -64,32 +64,49 @@ resource "aws_route_table_association" "a" {
 resource "aws_security_group" "security-group-terraform-checkpoint" {
   name        = "allow_inbound"
   description = "Allow inbound traffic"
-  vpc_id = aws_vpc.vpc-terraform-checkpoint.id
+  vpc_id      = aws_vpc.vpc-terraform-checkpoint.id
 
   ingress {
-    description      = "Http from VPC"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "Http from VPC"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   ingress {
-    description      = "SSH from VPC"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "SSH from VPC"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
     Name = "terraformed-security-group-checkpoint"
   }
+}
+
+# Launch EC2 T2 Micro Instance
+
+resource "aws_instance" "ec2-t2-micro" {
+  ami                         = "ami-00be885d550dcee43"
+  instance_type               = "t2.micro"
+  associate_public_ip_address = true
+  subnet_id                   = aws_subnet.subnet-terraform-checkpoint.id
+  vpc_security_group_ids      = [aws_security_group.security-group-terraform-checkpoint.id]
+  tags = {
+    Name = "terraformed-ec2-checkpoint"
+  }
+}
+
+output "ec2-public-ip" {
+  value = aws_instance.ec2-t2-micro.public_ip
 }
